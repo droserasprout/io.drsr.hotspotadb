@@ -11,6 +11,9 @@ build:
 install:
 	./gradlew installDebug
 
+release:
+	./gradlew assembleRelease
+
 lint:
 	./gradlew ktlintCheck detekt
 

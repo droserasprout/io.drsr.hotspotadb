@@ -21,8 +21,16 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/release.keystore
+
       - name: Build release APK
         run: ./gradlew --no-daemon assembleRelease
+        env:
+          KEYSTORE_PATH: /tmp/release.keystore
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
