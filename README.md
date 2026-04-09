@@ -1,3 +1,5 @@
+<img src="screenshot.png" align="right" width="300">
+
 # Hotspot Wireless Debugging
 
 Xposed module that allows Wireless Debugging (ADB over Wi-Fi) to work over Wi-Fi Hotspot on Android 15.
