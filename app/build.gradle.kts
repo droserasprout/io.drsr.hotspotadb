@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "dev.hotspot.wirelessdebug"
+    namespace = "io.drsr.hotspot_adb"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.hotspot.wirelessdebug"
+        applicationId = "io.drsr.hotspot_adb"
         minSdk = 35
         targetSdk = 35
         versionCode = 1

@@ -1,4 +1,4 @@
-package dev.hotspot.wirelessdebug
+package io.drsr.hotspot_adb
 
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.XposedBridge

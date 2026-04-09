@@ -1,4 +1,4 @@
-package dev.hotspot.wirelessdebug
+package io.drsr.hotspot_adb
 
 import android.content.Context
 import de.robv.android.xposed.XC_MethodHook

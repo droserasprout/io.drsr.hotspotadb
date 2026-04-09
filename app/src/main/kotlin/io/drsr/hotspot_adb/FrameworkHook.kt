@@ -1,4 +1,4 @@
-package dev.hotspot.wirelessdebug
+package io.drsr.hotspot_adb
 
 import android.content.BroadcastReceiver
 import android.content.Context
