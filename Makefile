@@ -1,10 +1,15 @@
-.PHONY: build install clean
+JAVA_HOME := /usr/lib/jvm/java-21-openjdk
+ANDROID_SDK_ROOT := $(HOME)/Android/Sdk
+
+unexport ANDROID_HOME
+
+.PHONY: $(MAKECMDGOALS)
 
 build:
 	./gradlew assembleDebug
 
 install:
-	adb install -r app/build/outputs/apk/debug/app-debug.apk
+	./gradlew installDebug
 
 clean:
 	./gradlew clean
