@@ -44,15 +44,15 @@ object FrameworkHook {
                                 "HotspotAP"
                             )
                             param.result = info
-                            XposedBridge.log("HotspotWirelessDebug: getCurrentWifiApInfo -> synthetic (hotspot active)")
+                            XposedBridge.log("HotspotAdb: getCurrentWifiApInfo -> synthetic (hotspot active)")
                         } catch (e: Exception) {
-                            XposedBridge.log("HotspotWirelessDebug: failed to create AdbConnectionInfo: $e")
+                            XposedBridge.log("HotspotAdb: failed to create AdbConnectionInfo: $e")
                         }
                     }
                 }
             )
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to hook getCurrentWifiApInfo: $e")
+            XposedBridge.log("HotspotAdb: failed to hook getCurrentWifiApInfo: $e")
         }
     }
 
@@ -80,24 +80,24 @@ object FrameworkHook {
                             ) {
                                 if (HotspotHelper.isHotspotActive(context)) {
                                     param.result = null
-                                    XposedBridge.log("HotspotWirelessDebug: suppressed $action (hotspot active)")
+                                    XposedBridge.log("HotspotAdb: suppressed $action (hotspot active)")
                                 }
                             }
                         }
                     }
                 )
                 found = true
-                XposedBridge.log("HotspotWirelessDebug: hooked BroadcastReceiver ${cls.name}")
+                XposedBridge.log("HotspotAdb: hooked BroadcastReceiver ${cls.name}")
                 break
             } catch (_: ClassNotFoundException) {
                 continue
             } catch (e: Exception) {
-                XposedBridge.log("HotspotWirelessDebug: error scanning inner class $i: $e")
+                XposedBridge.log("HotspotAdb: error scanning inner class $i: $e")
             }
         }
 
         if (!found) {
-            XposedBridge.log("HotspotWirelessDebug: BroadcastReceiver inner class not found, falling back to ContentResolver hook")
+            XposedBridge.log("HotspotAdb: BroadcastReceiver inner class not found, falling back to ContentResolver hook")
             hookSettingsGlobalDisable(lpparam)
         }
     }
@@ -123,7 +123,7 @@ object FrameworkHook {
                                     .invoke(resolver) as? Context
                                 if (context != null && HotspotHelper.isHotspotActive(context)) {
                                     param.result = false
-                                    XposedBridge.log("HotspotWirelessDebug: blocked ADB_WIFI_ENABLED=0 (hotspot active)")
+                                    XposedBridge.log("HotspotAdb: blocked ADB_WIFI_ENABLED=0 (hotspot active)")
                                 }
                             } catch (_: Exception) {
                             }
@@ -132,7 +132,7 @@ object FrameworkHook {
                 }
             )
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to hook Settings.Global.putInt: $e")
+            XposedBridge.log("HotspotAdb: failed to hook Settings.Global.putInt: $e")
         }
     }
 
@@ -141,7 +141,7 @@ object FrameworkHook {
             val manager = XposedHelpers.getObjectField(handler, "this\$0")
             XposedHelpers.getObjectField(manager, "mContext") as Context
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to get context: $e")
+            XposedBridge.log("HotspotAdb: failed to get context: $e")
             null
         }
     }

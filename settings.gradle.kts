@@ -15,5 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HotspotWirelessDebug"
+rootProject.name = "HotspotAdb"
 include(":app")

@@ -26,14 +26,14 @@ object SettingsHook {
                             val context = param.args[0] as Context
                             if (HotspotHelper.isHotspotActive(context)) {
                                 param.result = true
-                                XposedBridge.log("HotspotWirelessDebug: isWifiConnected -> true (hotspot active)")
+                                XposedBridge.log("HotspotAdb: isWifiConnected -> true (hotspot active)")
                             }
                         }
                     }
                 }
             )
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to hook isWifiConnected: $e")
+            XposedBridge.log("HotspotAdb: failed to hook isWifiConnected: $e")
         }
     }
 
@@ -50,14 +50,14 @@ object SettingsHook {
                             val ip = HotspotHelper.getHotspotIpAddress()
                             if (ip != null) {
                                 param.result = ip
-                                XposedBridge.log("HotspotWirelessDebug: getIpv4Address -> $ip (hotspot)")
+                                XposedBridge.log("HotspotAdb: getIpv4Address -> $ip (hotspot)")
                             }
                         }
                     }
                 }
             )
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to hook getIpv4Address: $e")
+            XposedBridge.log("HotspotAdb: failed to hook getIpv4Address: $e")
         }
     }
 }

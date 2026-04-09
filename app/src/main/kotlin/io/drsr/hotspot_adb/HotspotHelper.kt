@@ -17,7 +17,7 @@ object HotspotHelper {
             val state = method.invoke(wifiManager) as Int
             state == WIFI_AP_STATE_ENABLED
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to check hotspot state: $e")
+            XposedBridge.log("HotspotAdb: failed to check hotspot state: $e")
             false
         }
     }
@@ -34,7 +34,7 @@ object HotspotHelper {
                 }
             }
         } catch (e: Exception) {
-            XposedBridge.log("HotspotWirelessDebug: failed to get hotspot IP: $e")
+            XposedBridge.log("HotspotAdb: failed to get hotspot IP: $e")
         }
         return null
     }
