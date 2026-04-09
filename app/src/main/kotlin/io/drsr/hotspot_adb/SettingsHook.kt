@@ -178,12 +178,20 @@ object SettingsHook {
     @Suppress("UNUSED_PARAMETER")
     private fun getWirelessDebuggingSummary(context: Context, enabled: Boolean): String {
         if (!enabled) return ""
-        val ips = HotspotHelper.getIpAddresses()
-        if (ips.isEmpty()) return ""
-        val port = try {
-            val adbManager = context.getSystemService("adb")
-            XposedHelpers.callMethod(adbManager, "getAdbWirelessPort") as Int
+        val ip = HotspotHelper.getHotspotIpAddress(context) ?: return ""
+        val port = getAdbWirelessPort()
+        return if (port > 0) "$ip:$port" else ip
+    }
+
+    private fun getAdbWirelessPort(): Int {
+        return try {
+            val serviceManagerClass = Class.forName("android.os.ServiceManager")
+            val binder = serviceManagerClass.getMethod("getService", String::class.java)
+                .invoke(null, "adb")
+            val iAdbManagerStub = Class.forName("android.debug.IAdbManager\$Stub")
+            val adbService = iAdbManagerStub.getMethod("asInterface", android.os.IBinder::class.java)
+                .invoke(null, binder)
+            adbService.javaClass.getMethod("getAdbWirelessPort").invoke(adbService) as Int
         } catch (_: Throwable) { -1 }
-        return ips.joinToString(", ") { ip -> if (port > 0) "$ip:$port" else ip }
     }
 }
