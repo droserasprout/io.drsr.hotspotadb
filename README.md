@@ -16,6 +16,8 @@ Normally, Android requires an active Wi-Fi client connection to use Wireless Deb
 
 ## Installation
 
+Download the latest debug APK from [GitHub Actions](https://github.com/droserasprout/xposed-hotspot-adb/actions) artifacts, or build it yourself:
+
 1. Build the APK: `make build`
 2. Install: `make install`
 3. Enable the module in LSPosed for both scopes:
