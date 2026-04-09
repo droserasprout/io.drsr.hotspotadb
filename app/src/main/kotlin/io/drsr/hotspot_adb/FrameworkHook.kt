@@ -34,6 +34,13 @@ object FrameworkHook {
                         if (!HotspotHelper.isHotspotActive(context)) return
 
                         try {
+                            val ssid = try {
+                                val wm = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                                val config = wm.javaClass.getMethod("getSoftApConfiguration").invoke(wm)
+                                val wifiSsid = config.javaClass.getMethod("getWifiSsid").invoke(config)
+                                wifiSsid?.toString() ?: "HotspotAP"
+                            } catch (_: Throwable) { "HotspotAP" }
+
                             val connectionInfoClass = XposedHelpers.findClass(
                                 "com.android.server.adb.AdbDebuggingManager\$AdbConnectionInfo",
                                 lpparam.classLoader
@@ -41,7 +48,7 @@ object FrameworkHook {
                             val info = XposedHelpers.newInstance(
                                 connectionInfoClass,
                                 "02:00:00:00:00:00",
-                                "HotspotAP"
+                                ssid
                             )
                             param.result = info
                             XposedBridge.log("HotspotAdb: getCurrentWifiApInfo -> synthetic (hotspot active)")

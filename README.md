@@ -24,16 +24,16 @@ Grab the latest APK from [GitHub Actions](https://github.com/droserasprout/xpose
 ## Usage
 
 1. Enable Wi-Fi Hotspot
-2. Go to Settings > Developer Options > Wireless Debugging
-3. Enable the toggle, pair your client device
+2. Use the Wireless Debugging toggle on the hotspot settings screen, or go to Developer Options > Wireless Debugging
+3. Pair your client device
 4. From a hotspot guest:
 
 ```shell
-adb pair <ip>:<pairing_port>
+adb pair <ip>:<pairing_port> <pairing_code>
 adb connect <ip>:<port>
 ```
 
-On first use, Android prompts to trust a network called "HotspotAP" — this is a virtual identity for the hotspot interface. Fixed values are used because Android randomizes hotspot MAC on each enable, which would reset trust every time.
+On first use, Android prompts to trust a network matching your hotspot name. Renaming the hotspot will reset this trust. The MAC address is hardcoded because Android randomizes the hotspot MAC on each enable, which would reset trust every time.
 
 ## Building from source
 
