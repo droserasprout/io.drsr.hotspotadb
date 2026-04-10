@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ["*-*"]
+    tags: ["*.*.*"]
 
 jobs:
   release:
@@ -32,8 +32,25 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Parse changelog
+        id: changelog
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          version: ${{ github.ref_name }}
+
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
           files: app/build/outputs/apk/release/*.apk
-          generate_release_notes: true
+
+      - name: Publish to Xposed-Modules-Repo
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: Xposed-Modules-Repo/io.drsr.hotspotadb
+          token: ${{ secrets.XPOSED_REPO_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changes }}
+          files: app/build/outputs/apk/release/*.apk
