@@ -42,9 +42,7 @@ make clean     # clean build artifacts
 
 ## Other solutions
 
-[Magisk-WiFiADB](https://github.com/mrh929/magisk-wifiadb) — a Magisk module that enables legacy `adb tcpip` on boot by setting system properties. Simpler setup (no Xposed needed, just Magisk), works on older Android versions, and enables ADB automatically on boot. However, it uses the old unencrypted ADB protocol (no TLS, no pairing required but also no authentication), has no Settings UI integration, and isn't hotspot-aware.
-
-This module uses Android's native Wireless Debugging (TLS-encrypted, with device pairing) and integrates into the Settings app, but requires an Xposed framework (LSPosed) and currently targets Android 15 only.
+[Magisk-WiFiADB](https://github.com/mrh929/magisk-wifiadb) — Magisk module, enables legacy `adb tcpip` on boot. Simpler (just Magisk, any Android), but unencrypted and not hotspot-aware. This module hooks native Wireless Debugging (TLS, pairing) with Settings UI, but needs LSPosed and Android 15.
 
 # License
 
