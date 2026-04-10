@@ -23,44 +23,29 @@ object HotspotHelper {
 
     /**
      * Returns the IP address of the hotspot (AP) interface.
-     * Filters out loopback, mobile data (rmnet*), and station Wi-Fi interfaces.
-     */
-    fun getHotspotIpAddress(): String? {
-        try {
-            val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
-            for (iface in interfaces) {
-                if (iface.isLoopback || !iface.isUp) continue
-                // Skip mobile data interfaces
-                if (iface.name.startsWith("rmnet")) continue
-                // Skip non-wlan interfaces (dummy, bond, p2p, etc.)
-                if (!iface.name.startsWith("wlan") && !iface.name.startsWith("ap") && !iface.name.startsWith("swlan")) continue
-                for (addr in iface.inetAddresses) {
-                    if (addr is Inet4Address && !addr.isLoopbackAddress) {
-                        return addr.hostAddress
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            XposedBridge.log("HotspotAdb: failed to get hotspot IP: $e")
-        }
-        return null
-    }
-
-    /**
-     * Returns the hotspot IP, excluding the station Wi-Fi IP if Wi-Fi client is also connected.
+     * Filters out loopback, mobile data (rmnet*), non-wlan interfaces, and the station Wi-Fi IP.
      */
     fun getHotspotIpAddress(context: Context): String? {
         val stationIp = getStationWifiIp(context)
+        return getApInterfaceIp(excludeIp = stationIp)
+    }
+
+    private fun getApInterfaceIp(excludeIp: String? = null): String? {
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces() ?: return null
             for (iface in interfaces) {
                 if (iface.isLoopback || !iface.isUp) continue
                 if (iface.name.startsWith("rmnet")) continue
-                if (!iface.name.startsWith("wlan") && !iface.name.startsWith("ap") && !iface.name.startsWith("swlan")) continue
+                if (!iface.name.startsWith("wlan") &&
+                    !iface.name.startsWith("ap") &&
+                    !iface.name.startsWith("swlan")
+                ) {
+                    continue
+                }
                 for (addr in iface.inetAddresses) {
                     if (addr is Inet4Address && !addr.isLoopbackAddress) {
                         val ip = addr.hostAddress ?: continue
-                        if (ip != stationIp) return ip
+                        if (ip != excludeIp) return ip
                     }
                 }
             }

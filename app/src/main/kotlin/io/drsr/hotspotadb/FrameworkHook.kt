@@ -138,7 +138,8 @@ object FrameworkHook {
                                     param.result = false
                                     XposedBridge.log("HotspotAdb: blocked ADB_WIFI_ENABLED=0 (hotspot active)")
                                 }
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
+                                XposedBridge.log("HotspotAdb: failed to get context from ContentResolver: $e")
                             }
                         }
                     }

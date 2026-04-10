@@ -52,14 +52,12 @@ object SettingsHook {
                 "getIpv4Address",
                 object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
-                        val result = param.result as? String
-                        if (result.isNullOrEmpty()) {
-                            val ip = HotspotHelper.getHotspotIpAddress()
-                            if (ip != null) {
-                                param.result = ip
-                                XposedBridge.log("HotspotAdb: getIpv4Address -> $ip (hotspot)")
-                            }
-                        }
+                        val context =
+                            XposedHelpers.getObjectField(param.thisObject, "mContext") as? Context
+                                ?: return
+                        if (!HotspotHelper.isHotspotActive(context)) return
+                        val ip = HotspotHelper.getHotspotIpAddress(context) ?: return
+                        param.result = ip
                     }
                 },
             )
@@ -163,22 +161,24 @@ object SettingsHook {
 
         XposedHelpers.callMethod(screen, "addPreference", pref)
 
-        // ContentObserver to sync state from Developer Options
-        val uri = Settings.Global.getUriFor(ADB_WIFI_ENABLED)
-        context.contentResolver.registerContentObserver(
-            uri,
-            false,
-            object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(
-                    selfChange: Boolean,
-                    uri: Uri?,
-                ) {
-                    val on = isAdbWifiEnabled(context)
-                    XposedHelpers.callMethod(pref, "setChecked", on)
-                    XposedHelpers.callMethod(pref, "setSummary", getWirelessDebuggingSummary(context, on) as CharSequence)
+        // Sync state from Developer Options; observer stored on the fragment to avoid leaks
+        val observerTag = "hotspot_adb_observer"
+        if (XposedHelpers.getAdditionalInstanceField(fragment, observerTag) == null) {
+            val uri = Settings.Global.getUriFor(ADB_WIFI_ENABLED)
+            val observer =
+                object : ContentObserver(Handler(Looper.getMainLooper())) {
+                    override fun onChange(
+                        selfChange: Boolean,
+                        uri: Uri?,
+                    ) {
+                        val on = isAdbWifiEnabled(context)
+                        XposedHelpers.callMethod(pref, "setChecked", on)
+                        XposedHelpers.callMethod(pref, "setSummary", getWirelessDebuggingSummary(context, on) as CharSequence)
+                    }
                 }
-            },
-        )
+            context.contentResolver.registerContentObserver(uri, false, observer)
+            XposedHelpers.setAdditionalInstanceField(fragment, observerTag, observer)
+        }
 
         XposedBridge.log("HotspotAdb: added wireless debugging toggle to hotspot settings")
     }
@@ -187,7 +187,6 @@ object SettingsHook {
         return Settings.Global.getInt(context.contentResolver, ADB_WIFI_ENABLED, 0) == 1
     }
 
-    @Suppress("UNUSED_PARAMETER")
     private fun getWirelessDebuggingSummary(
         context: Context,
         enabled: Boolean,
