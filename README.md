@@ -23,8 +23,7 @@ guests can connect via ADB while the device acts as a SoftAP / hotspot.
 
 ## Installation
 
-Grab the latest APK from [GitHub Actions](https://github.com/cbkii/hotspotadb/actions)
-artifacts, or [build from source](#building-from-source).
+Grab the latest signed APK from [GitHub Releases](https://github.com/cbkii/hotspotadb/releases), or [build from source](#building-from-source).
 
 1. Install the APK
 2. Enable the module in LSPosed for both scopes:
