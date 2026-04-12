@@ -123,13 +123,22 @@ jobs:
           fi
 
       # ── 4. Decode keystore and validate credentials ───────────────────────
-      # Decode and keytool-validate BEFORE the expensive Android SDK / Gradle
-      # setup so bad keystore content or wrong credentials fail fast.
+      # Java is set up first so that keytool comes from the known Temurin
+      # distribution rather than whatever is preinstalled on the runner image.
+      # Android SDK / Gradle setup is deferred until step 5 to keep the
+      # expensive SDK download after the fast credential validation.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Decode keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
+          umask 077
           printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > /tmp/release.keystore
+          chmod 600 /tmp/release.keystore
           echo "Keystore decoded to /tmp/release.keystore ($(wc -c < /tmp/release.keystore) bytes)"
 
       - name: Validate keystore credentials
@@ -144,12 +153,7 @@ jobs:
             -noprompt
           echo "Keystore credentials validated: alias is present and accessible."
 
-      # ── 5. Set up build toolchain ─────────────────────────────────────────
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
+      # ── 5. Set up remaining build toolchain ───────────────────────────────
       - uses: android-actions/setup-android@v3
 
       - uses: gradle/actions/setup-gradle@v4
