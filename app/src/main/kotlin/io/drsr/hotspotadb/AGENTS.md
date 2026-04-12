@@ -15,6 +15,19 @@ Current source files have distinct responsibilities:
 
 Preserve that separation unless there is a strong reason to refactor.
 
+## Current runtime/framework assumptions
+
+For code in this directory, assume the important modern host stack is:
+- Android 16
+- Magisk `v30.7` or other recent root solution with equivalent Zygisk environment
+- Vector `v2.0` stable as the primary framework target
+- libxposed API `101.0.1` for real modern-migration work
+
+Implications:
+- Do not write code that depends on LSPosed-specific branding, manager package names, or UI strings.
+- For modern-track changes, use real libxposed APIs rather than legacy helper semantics hidden behind wrappers.
+- Keep logs and comments framework-neutral unless a behaviour is genuinely Vector-specific.
+
 ## Editing rules for framework hooks
 
 `FrameworkHook.kt` is the highest-risk file in the repo.
@@ -68,6 +81,13 @@ Refactor only when it improves one of these:
 - readability of hotspot gating
 
 Do not refactor purely for aesthetic reasons if it increases uncertainty around runtime hook behaviour.
+
+## Modern runtime compatibility notes
+
+When touching hook installation or lifecycle code, ensure the implementation remains credible under the current Magisk/Vector runtime model:
+- Vector is delivered as a system module installed through Magisk/KernelSU and depends on a Zygisk-capable environment.
+- Framework-side failures may be caused by host framework drift rather than app/module code; call that out explicitly in comments or summaries.
+- If the task is a modern migration, avoid leaving behind code paths that only make sense for legacy `XposedHelpers`/`XC_MethodHook` flow.
 
 ## Validation expectations for code in this directory
 

@@ -12,6 +12,26 @@ Today, the codebase is a **legacy XposedBridge module**:
 
 Do **not** describe or treat the current code as a modern libxposed / API 101 module unless the task is explicitly a migration.
 
+## Current external runtime baseline
+
+Treat the following upstream state as the default compatibility baseline unless the user supplies fresher verified evidence:
+
+- **Magisk latest stable:** `v30.7`
+  - explicitly adds Android 16 QPR2 sepolicy support
+  - explicitly adds Zygisk support for Android 16 QPR2 and higher
+- **Vector latest stable release:** `v2.0`
+  - current stable framework release in the LSPosed→Vector transition
+  - release notes position it as the definitive API-100-era implementation published after libxposed API 101 appeared
+- **Modern libxposed API baseline:** `101.0.1`
+- **Vector runtime expectation:** a recent Magisk or KernelSU installation with Zygisk enabled
+- **Vector troubleshooting expectation:** latest debug build is recommended for investigation, and upstream asks that bug reports be based on the latest debug build
+
+These matter for planning:
+- A modern migration must target **real libxposed API 101.0.1 packaging/runtime**, not legacy LSPosed metadata with renamed branding.
+- Compatibility claims should be phrased for **Vector v2.0 stable** first, then note any debug-build verification separately.
+- Do not assume an LSPosed-branded manager UX, notifications, or wording once the task is about modern Vector compatibility.
+- Do not write instructions that require obsolete Magisk behaviour when current Magisk v30.7 already supports Android 16 QPR2 and current Zygisk paths.
+
 ## What matters most in this repo
 
 The module has two hook domains and both must stay coherent:
@@ -96,6 +116,9 @@ This is a structural port, not a small patch. It likely requires:
 - moving module metadata to modern locations
 - changing entrypoint mechanics
 - revisiting hook helper usage and framework assumptions
+- targeting libxposed `101.0.1` unless fresher upstream guidance is explicitly provided
+- validating packaging/runtime assumptions against current Vector `v2.0` behaviour, not historical LSPosed-only behaviour
+- ensuring the final module works in a recent Magisk + Zygisk environment
 
 Do not partially mix Track A and Track B in the same change unless the task explicitly asks for a staged migration.
 
@@ -128,6 +151,30 @@ The hotspot helper logic is heuristic by nature.
 - Distinguish station Wi‑Fi IP from hotspot/AP IP.
 - If changing IP discovery, preserve backward compatibility and document the exact reason.
 - Be careful with trust identity behaviour tied to SSID/BSSID; do not change synthetic identity behaviour casually.
+
+## Root/framework validation matrix
+
+When a task touches packaging, lifecycle, or runtime compatibility, think in terms of the actual host stack, not only the APK:
+
+1. **Primary modern stack**
+   - Magisk `v30.7`
+   - Zygisk enabled
+   - Vector `v2.0` stable
+   - Android 16 on a supported Pixel device
+
+2. **Framework regression check stack**
+   - same as above, but also consider the latest Vector debug/canary build when behaviour appears framework-specific
+
+3. **Legacy comparison stack**
+   - only if the task explicitly requires legacy XposedBridge/LSPosed behaviour comparison
+
+When documenting results, state clearly whether validation is aimed at:
+- Magisk compatibility
+- Vector stable compatibility
+- Vector latest debug-build compatibility
+- libxposed API 101 packaging correctness
+
+Do not collapse those into a vague claim like “works on LSPosed”.
 
 ## Build, lint, and validation
 
