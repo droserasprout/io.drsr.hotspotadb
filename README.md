@@ -16,7 +16,7 @@ Android 11+ only enables Wireless Debugging when the device is connected to Wi-F
 
 | Device | Android | ROM | Zygisk | Xposed |
 | --- | --- | --- | --- | -- |
-| enchilada | 15 | LineageOS 22.2 | Magisk 30.7 | LSPosed 1.9.2 </br> Vector 2.0 |
+| enchilada | 15 | LineageOS 22.2 | Magisk 30.7 </br> NeoZygisk 2.3 | LSPosed 1.9.2 </br> Vector 2.0 |
 | tucana | 16 | LineageOS 23.2 | Magisk 30.7 | Vector 2.0 |
 
 If this module works (or not) on your device/ROM, please [open an issue](https://github.com/droserasprout/io.drsr.hotspotadb/issues) with details!
