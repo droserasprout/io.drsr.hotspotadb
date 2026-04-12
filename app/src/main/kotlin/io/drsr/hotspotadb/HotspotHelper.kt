@@ -2,11 +2,12 @@ package io.drsr.hotspotadb
 
 import android.content.Context
 import android.net.wifi.WifiManager
-import de.robv.android.xposed.XposedBridge
+import android.util.Log
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
 object HotspotHelper {
+    private const val TAG = HotspotAdbModule.TAG
     private const val WIFI_AP_STATE_ENABLED = 13
 
     fun isHotspotActive(context: Context): Boolean {
@@ -16,7 +17,7 @@ object HotspotHelper {
             val state = method.invoke(wifiManager) as Int
             state == WIFI_AP_STATE_ENABLED
         } catch (e: Exception) {
-            XposedBridge.log("HotspotAdb: failed to check hotspot state: $e")
+            Log.w(TAG, "HotspotAdb: failed to check hotspot state: $e")
             false
         }
     }
@@ -53,7 +54,7 @@ object HotspotHelper {
                 }
             }
         } catch (e: Exception) {
-            XposedBridge.log("HotspotAdb: failed to get hotspot IP: $e")
+            Log.w(TAG, "HotspotAdb: failed to get hotspot IP: $e")
         }
         return null
     }
