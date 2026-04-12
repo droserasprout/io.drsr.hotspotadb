@@ -6,6 +6,11 @@ name: Release
 #
 # Required secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
 # Optional secret:  XPOSED_REPO_TOKEN  (publish to Xposed-Modules-Repo; skipped when absent)
+#
+# Step order rationale: secrets are validated and the APK is built BEFORE any
+# git commit or tag is created.  This ensures that a failed keystore decode or
+# build failure never leaves an orphaned "Release X.Y.Z" commit or tag without
+# a corresponding published APK.
 
 on:
   workflow_dispatch:
@@ -69,7 +74,8 @@ jobs:
             exit 1
           fi
 
-      # ── 3. Fail early for missing signing secrets ──────────────────────────
+      # ── 3. Fail early for missing or invalid signing secrets ───────────────
+      # Done before toolchain setup so failures are fast and cheap.
       - name: Validate signing secrets
         run: |
           MISSING=""
@@ -82,14 +88,30 @@ jobs:
             exit 1
           fi
           # Validate KEYSTORE_BASE64 is decodable (strip whitespace first to handle
-          # line-wrapped or Windows-encoded secrets)
+          # line-wrapped or Windows-encoded secrets).
           if ! printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" \
                | tr -d '[:space:]' | base64 -d > /dev/null 2>&1; then
             echo "::error::KEYSTORE_BASE64 is not valid base64. Re-encode with: base64 -w 0 release.keystore"
             exit 1
           fi
 
-      # ── 4. Update version metadata ────────────────────────────────────────
+      # ── 4. Set up build toolchain ─────────────────────────────────────────
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # ── 5. Decode keystore ────────────────────────────────────────────────
+      # strip whitespace before decoding to handle line-wrapped or Windows
+      # (\r\n) encoded secrets.
+      - name: Decode keystore
+        run: printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > /tmp/release.keystore
+
+      # ── 6. Update version metadata (local — not committed yet) ────────────
       # Files updated: app/build.gradle.kts, CHANGELOG.md
       - name: Update version metadata
         run: |
@@ -121,7 +143,7 @@ jobs:
             fi
           fi
 
-      # ── 5. Extract release notes from CHANGELOG.md ────────────────────────
+      # ── 7. Extract release notes from CHANGELOG.md ────────────────────────
       - name: Extract release notes
         id: notes
         run: |
@@ -138,29 +160,7 @@ jobs:
             echo "RELEASE_NOTES_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # ── 6. Commit metadata changes and create tag ─────────────────────────
-      - name: Commit and tag
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add app/build.gradle.kts CHANGELOG.md
-          git commit -m "Release ${{ steps.version.outputs.version }}"
-          git tag "${{ steps.version.outputs.version }}"
-          git push origin HEAD:"${{ github.ref_name }}" "${{ steps.version.outputs.version }}"
-
-      # ── 7. Build signed release APK ───────────────────────────────────────
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-
-      - uses: android-actions/setup-android@v3
-
-      - uses: gradle/actions/setup-gradle@v4
-
-      - name: Decode keystore
-        run: printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '[:space:]' | base64 -d > /tmp/release.keystore
-
+      # ── 8. Build signed release APK ───────────────────────────────────────
       - name: Build release APK
         run: ./gradlew --no-daemon assembleRelease
         env:
@@ -169,7 +169,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      # ── 8. Validate release APK module packaging ─────────────────────────
+      # ── 9. Validate release APK module packaging ──────────────────────────
       - name: Validate module packaging
         run: |
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
@@ -207,7 +207,19 @@ jobs:
           fi
           echo "Module packaging validation passed."
 
-      # ── 9. Publish GitHub Release in this repository ──────────────────────
+      # ── 10. Commit metadata changes and create tag ────────────────────────
+      # Only reached after a successful build and validation — no orphaned
+      # commits or tags if the build or signing fails.
+      - name: Commit and tag
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add app/build.gradle.kts CHANGELOG.md
+          git commit -m "Release ${{ steps.version.outputs.version }}"
+          git tag "${{ steps.version.outputs.version }}"
+          git push origin HEAD:"${{ github.ref_name }}" "${{ steps.version.outputs.version }}"
+
+      # ── 11. Publish GitHub Release in this repository ─────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -216,7 +228,7 @@ jobs:
           body: ${{ steps.notes.outputs.changes }}
           files: app/build/outputs/apk/release/*.apk
 
-      # ── 10. Publish to Xposed-Modules-Repo (optional) ────────────────────
+      # ── 12. Publish to Xposed-Modules-Repo (optional) ────────────────────
       # Skipped when XPOSED_REPO_TOKEN is not configured.
       #- name: Log Xposed-Modules-Repo publish status
       #  if: ${{ secrets.XPOSED_REPO_TOKEN == '' }}
